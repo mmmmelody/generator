@@ -15,51 +15,61 @@
  */
 package org.mybatis.generator.codegen.mybatis3.javamapper.elements;
 
+import org.mybatis.generator.api.IntrospectedColumn;
+import org.mybatis.generator.api.dom.java.*;
+
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
-import org.mybatis.generator.api.dom.java.Interface;
-import org.mybatis.generator.api.dom.java.JavaVisibility;
-import org.mybatis.generator.api.dom.java.Method;
-import org.mybatis.generator.api.dom.java.Parameter;
-
-public class UpdateByPrimaryKeySelectiveMethodGenerator extends
+public class DeleteByIdListMethodGenerator extends
         AbstractJavaMapperMethodGenerator {
 
-    public UpdateByPrimaryKeySelectiveMethodGenerator() {
+    private boolean isSimple;
+
+    public DeleteByIdListMethodGenerator(boolean isSimple) {
         super();
+        this.isSimple = isSimple;
     }
 
     @Override
     public void addInterfaceElements(Interface interfaze) {
         Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
-        FullyQualifiedJavaType parameterType;
-
-        if (introspectedTable.getRules().generateRecordWithBLOBsClass()) {
-            parameterType = new FullyQualifiedJavaType(introspectedTable
-                    .getRecordWithBLOBsType());
-        } else {
-            parameterType = new FullyQualifiedJavaType(introspectedTable
-                    .getBaseRecordType());
-        }
-
-        importedTypes.add(parameterType);
-
-        Method method = new Method("update");
+        Method method = new Method("deleteByIdList");
         method.setVisibility(JavaVisibility.PUBLIC);
         method.setAbstract(true);
         method.setReturnType(FullyQualifiedJavaType.getIntInstance());
-        method.addParameter(new Parameter(parameterType, "record")); //$NON-NLS-1$
+
+        if (!isSimple && introspectedTable.getRules().generatePrimaryKeyClass()) {
+            FullyQualifiedJavaType type = new FullyQualifiedJavaType(
+                    introspectedTable.getPrimaryKeyType());
+            importedTypes.add(type);
+            method.addParameter(new Parameter(type, "key")); //$NON-NLS-1$
+        } else {
+            List<IntrospectedColumn> introspectedColumns = introspectedTable
+                    .getPrimaryKeyColumns();
+            StringBuilder sb = new StringBuilder();
+            for (IntrospectedColumn introspectedColumn : introspectedColumns) {
+                FullyQualifiedJavaType type = introspectedColumn
+                        .getFullyQualifiedJavaType();
+                importedTypes.add(type);
+                Parameter parameter = new Parameter(new FullyQualifiedJavaType("List<Long>"), "idList");
+                sb.setLength(0);
+                sb.append("@Param(\"");
+                sb.append("idList");
+                sb.append("\")");
+                parameter.addAnnotation(sb.toString());
+                method.addParameter(parameter);
+            }
+        }
 
         context.getCommentGenerator().addGeneralMethodComment(method,
                 introspectedTable);
 
         addMapperAnnotations(method);
-        
-        if (context.getPlugins()
-                .clientUpdateByPrimaryKeySelectiveMethodGenerated(method,
-                        interfaze, introspectedTable)) {
+
+        if (context.getPlugins().clientDeleteByPrimaryKeyMethodGenerated(
+                method, interfaze, introspectedTable)) {
             addExtraImports(interfaze);
             interfaze.addImportedTypes(importedTypes);
             interfaze.addMethod(method);

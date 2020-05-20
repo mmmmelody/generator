@@ -34,7 +34,7 @@ public class UpdateByPrimaryKeySelectiveElementGenerator extends
         XmlElement answer = new XmlElement("update"); //$NON-NLS-1$
 
         answer.addAttribute(new Attribute(
-                "id", introspectedTable.getUpdateByPrimaryKeySelectiveStatementId())); //$NON-NLS-1$
+                "id", "update")); //$NON-NLS-1$
 
         String parameterType;
 

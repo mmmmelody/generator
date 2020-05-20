@@ -38,7 +38,7 @@ public class SelectByPrimaryKeyMethodGenerator extends
 
     @Override
     public void addInterfaceElements(Interface interfaze) {
-        Method method = new Method(introspectedTable.getSelectByPrimaryKeyStatementId());
+        Method method = new Method("seleteById");
         method.setVisibility(JavaVisibility.PUBLIC);
         method.setAbstract(true);
 
@@ -73,13 +73,11 @@ public class SelectByPrimaryKeyMethodGenerator extends
                 importedTypes.add(type);
                 Parameter parameter = new Parameter(type, introspectedColumn
                         .getJavaProperty());
-                if (annotate) {
-                    sb.setLength(0);
-                    sb.append("@Param(\""); //$NON-NLS-1$
-                    sb.append(introspectedColumn.getJavaProperty());
-                    sb.append("\")"); //$NON-NLS-1$
-                    parameter.addAnnotation(sb.toString());
-                }
+                sb.setLength(0);
+                sb.append("@Param(\""); //$NON-NLS-1$
+                sb.append(introspectedColumn.getJavaProperty());
+                sb.append("\")"); //$NON-NLS-1$
+                parameter.addAnnotation(sb.toString());
                 method.addParameter(parameter);
             }
         }

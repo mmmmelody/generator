@@ -76,7 +76,7 @@ public class JavaMapperGenerator extends AbstractJavaClientGenerator {
         addSelectQueryAllNumberMethod(interfaze);
         addInsertMethod(interfaze);
         addUpdateByPrimaryKeySelectiveMethod(interfaze);
-        addDeleteByPrimaryKeyMethod(interfaze);
+        addDeleteByIdListMethodGenerator(interfaze);
         /**
          * =================================
          */
@@ -121,6 +121,12 @@ public class JavaMapperGenerator extends AbstractJavaClientGenerator {
     protected void addDeleteByPrimaryKeyMethod(Interface interfaze) {
         if (introspectedTable.getRules().generateDeleteByPrimaryKey()) {
             AbstractJavaMapperMethodGenerator methodGenerator = new DeleteByPrimaryKeyMethodGenerator(false);
+            initializeAndExecuteGenerator(methodGenerator, interfaze);
+        }
+    }
+    protected void addDeleteByIdListMethodGenerator(Interface interfaze) {
+        if (introspectedTable.getRules().generateDeleteByPrimaryKey()) {
+            AbstractJavaMapperMethodGenerator methodGenerator = new DeleteByIdListMethodGenerator(false);
             initializeAndExecuteGenerator(methodGenerator, interfaze);
         }
     }
@@ -192,6 +198,7 @@ public class JavaMapperGenerator extends AbstractJavaClientGenerator {
             initializeAndExecuteGenerator(methodGenerator, interfaze);
         }
     }
+
 
     protected void addUpdateByPrimaryKeySelectiveMethod(Interface interfaze) {
         if (introspectedTable.getRules().generateUpdateByPrimaryKeySelective()) {
