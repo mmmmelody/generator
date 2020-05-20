@@ -16,10 +16,14 @@ This library will generate code for use with MyBatis. It will introspect a datab
 MBG can generate code in multiple styles (or "runtimes"). MBG can generate code for Java based projects, or for Kotlin based projects.
 
 接口如下：
-* seleteById
-* queryAll
-* queryAllNumber
-* insert
-* update
-* deleteByIdList
-* delete
+* StudentEntity seleteById(@Param("id") Long id);
+
+* List<StudentEntity> queryAll(StudentEntity record);
+
+* Long queryAllNumber(StudentEntity record);
+
+* int insert(StudentEntity record);
+
+* int update(StudentEntity record);
+
+* int deleteByIdList(@Param("idList") List<Long> idList);
