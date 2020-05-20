@@ -107,11 +107,12 @@ public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
         if (context.getJavaClientGeneratorConfiguration() == null) {
             return null;
         }
-        
+        // XMLMAPPER
         String type = context.getJavaClientGeneratorConfiguration()
                 .getConfigurationType();
 
         AbstractJavaClientGenerator javaGenerator;
+        //这里
         if ("XMLMAPPER".equalsIgnoreCase(type)) { //$NON-NLS-1$
             javaGenerator = new JavaMapperGenerator(getClientProject());
         } else if ("MIXEDMAPPER".equalsIgnoreCase(type)) { //$NON-NLS-1$
@@ -175,8 +176,9 @@ public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
     @Override
     public List<GeneratedJavaFile> getGeneratedJavaFiles() {
         List<GeneratedJavaFile> answer = new ArrayList<>();
-
+        //包含entity之前的mapper接口在构造方法时生成
         for (AbstractJavaGenerator javaGenerator : javaGenerators) {
+            //真正开始生成
             List<CompilationUnit> compilationUnits = javaGenerator
                     .getCompilationUnits();
             for (CompilationUnit compilationUnit : compilationUnits) {
@@ -231,7 +233,8 @@ public class IntrospectedTableMyBatis3Impl extends IntrospectedTable {
     @Override
     public List<GeneratedXmlFile> getGeneratedXmlFiles() {
         List<GeneratedXmlFile> answer = new ArrayList<>();
-
+        //xmlMapperGenerator = javaClientGenerator.getMatchedXMLGenerator();
+        // 包含了context
         if (xmlMapperGenerator != null) {
             Document document = xmlMapperGenerator.getDocument();
             GeneratedXmlFile gxf = new GeneratedXmlFile(document,

@@ -245,7 +245,7 @@ public class MyBatisGenerator {
             totalSteps += context.getIntrospectionSteps();
         }
         callback.introspectionStarted(totalSteps);
-
+        //获取数据库连接
         for (Context context : contextsToRun) {
             context.introspectTables(callback, warnings,
                     fullyQualifiedTableNames);
@@ -259,11 +259,12 @@ public class MyBatisGenerator {
         callback.generationStarted(totalSteps);
 
         for (Context context : contextsToRun) {
+            //1、生成文件模板：全路径文件名+文件模板内容
             context.generateFiles(callback, generatedJavaFiles,
                     generatedXmlFiles, generatedKotlinFiles, warnings);
         }
 
-        // now save the files
+        //2、输出文件
         if (writeFiles) {
             callback.saveStarted(generatedXmlFiles.size()
                     + generatedJavaFiles.size());
@@ -278,10 +279,10 @@ public class MyBatisGenerator {
                 writeGeneratedJavaFile(gjf, callback);
             }
 
-            for (GeneratedKotlinFile gkf : generatedKotlinFiles) {
-                projects.add(gkf.getTargetProject());
-                writeGeneratedKotlinFile(gkf, callback);
-            }
+//            for (GeneratedKotlinFile gkf : generatedKotlinFiles) {
+//                projects.add(gkf.getTargetProject());
+//                writeGeneratedKotlinFile(gkf, callback);
+//            }
 
             for (String project : projects) {
                 shellCallback.refreshProject(project);
@@ -296,30 +297,15 @@ public class MyBatisGenerator {
         File targetFile;
         String source;
         try {
+            //文件夹不存在，创建
             File directory = shellCallback.getDirectory(gjf
                     .getTargetProject(), gjf.getTargetPackage());
             targetFile = new File(directory, gjf.getFileName());
             if (targetFile.exists()) {
-                if (shellCallback.isMergeSupported()) {
-                    source = shellCallback.mergeJavaFile(gjf
-                            .getFormattedContent(), targetFile,
-                            MergeConstants.getOldElementTags(),
-                            gjf.getFileEncoding());
-                } else if (shellCallback.isOverwriteEnabled()) {
-                    source = gjf.getFormattedContent();
-                    warnings.add(getString("Warning.11", //$NON-NLS-1$
-                            targetFile.getAbsolutePath()));
-                } else {
-                    source = gjf.getFormattedContent();
-                    targetFile = getUniqueFileName(directory, gjf
-                            .getFileName());
-                    warnings.add(getString(
-                            "Warning.2", targetFile.getAbsolutePath())); //$NON-NLS-1$
-                }
-            } else {
-                source = gjf.getFormattedContent();
+                //生成前，如果存在直接删除
+                targetFile.delete();
             }
-
+            source = gjf.getFormattedContent();
             callback.checkCancel();
             callback.startTask(getString(
                     "Progress.15", targetFile.getName())); //$NON-NLS-1$
@@ -370,30 +356,16 @@ public class MyBatisGenerator {
             File directory = shellCallback.getDirectory(gxf
                     .getTargetProject(), gxf.getTargetPackage());
             targetFile = new File(directory, gxf.getFileName());
+            //生成前，如果存在直接删除
             if (targetFile.exists()) {
-                if (gxf.isMergeable()) {
-                    source = XmlFileMergerJaxp.getMergedSource(gxf,
-                            targetFile);
-                } else if (shellCallback.isOverwriteEnabled()) {
-                    source = gxf.getFormattedContent();
-                    warnings.add(getString("Warning.11", //$NON-NLS-1$
-                            targetFile.getAbsolutePath()));
-                } else {
-                    source = gxf.getFormattedContent();
-                    targetFile = getUniqueFileName(directory, gxf
-                            .getFileName());
-                    warnings.add(getString(
-                            "Warning.2", targetFile.getAbsolutePath())); //$NON-NLS-1$
-                }
-            } else {
-                source = gxf.getFormattedContent();
+                targetFile.delete();
             }
-
+            source = gxf.getFormattedContent();
             callback.checkCancel();
             callback.startTask(getString(
                     "Progress.15", targetFile.getName())); //$NON-NLS-1$
             writeFile(targetFile, source, "UTF-8"); //$NON-NLS-1$
-        } catch (ShellException e) {
+        } catch (Exception e) {
             warnings.add(e.getMessage());
         }
     }

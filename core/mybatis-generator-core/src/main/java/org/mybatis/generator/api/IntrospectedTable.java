@@ -385,8 +385,11 @@ public abstract class IntrospectedTable {
     }
 
     public void initialize() {
+        //生成mapper接口全路径名
         calculateJavaClientAttributes();
+        //生成model接口全路径名
         calculateModelAttributes();
+        //生成xml文件全路径名
         calculateXmlAttributes();
 
         if (tableConfiguration.getModelType() == ModelType.HIERARCHICAL) {

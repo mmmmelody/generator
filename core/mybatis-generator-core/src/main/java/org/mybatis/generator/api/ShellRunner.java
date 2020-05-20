@@ -15,6 +15,7 @@
  */
 package org.mybatis.generator.api;
 
+import com.alibaba.fastjson.JSON;
 import static org.mybatis.generator.internal.util.messages.Messages.getString;
 
 import java.io.File;
@@ -51,71 +52,34 @@ public class ShellRunner {
     private static final String HELP_2 = "-h"; //$NON-NLS-1$
 
     public static void main(String[] args) {
-        if (args.length == 0) {
-            usage();
-            System.exit(0);
-            return; // only to satisfy compiler, never returns
-        }
-
-        Map<String, String> arguments = parseCommandLine(args);
-
-        if (arguments.containsKey(HELP_1)) {
-            usage();
-            System.exit(0);
-            return; // only to satisfy compiler, never returns
-        }
-
-        if (!arguments.containsKey(CONFIG_FILE)) {
-            writeLine(getString("RuntimeError.0")); //$NON-NLS-1$
-            return;
-        }
-
+        //创建一个警告列表，整个MBG运行过程中的所有警告信息都放在这个列表中，执行完成后统一System.out
         List<String> warnings = new ArrayList<>();
-
-        String configfile = arguments.get(CONFIG_FILE);
+        //得到generatorConfig.xml文件
+        String configfile = "/Users/melody/Desktop/generatorConfig.xml";
         File configurationFile = new File(configfile);
         if (!configurationFile.exists()) {
             writeLine(getString("RuntimeError.1", configfile)); //$NON-NLS-1$
             return;
         }
-
+        //如果参数有tables，得到table名称列表
         Set<String> fullyqualifiedTables = new HashSet<>();
-        if (arguments.containsKey(TABLES)) {
-            StringTokenizer st = new StringTokenizer(arguments.get(TABLES), ","); //$NON-NLS-1$
-            while (st.hasMoreTokens()) {
-                String s = st.nextToken().trim();
-                if (s.length() > 0) {
-                    fullyqualifiedTables.add(s);
-                }
-            }
-        }
 
         Set<String> contexts = new HashSet<>();
-        if (arguments.containsKey(CONTEXT_IDS)) {
-            StringTokenizer st = new StringTokenizer(
-                    arguments.get(CONTEXT_IDS), ","); //$NON-NLS-1$
-            while (st.hasMoreTokens()) {
-                String s = st.nextToken().trim();
-                if (s.length() > 0) {
-                    contexts.add(s);
-                }
-            }
-        }
-
         try {
+            //创建配置解析器
             ConfigurationParser cp = new ConfigurationParser(warnings);
+            //将xml配置load到Configuration中
             Configuration config = cp.parseConfiguration(configurationFile);
-
-            DefaultShellCallback shellCallback = new DefaultShellCallback(
-                    arguments.containsKey(OVERWRITE));
-
+            System.out.println(JSON.toJSONString(config));
+            //创建一个默认的ShellCallback对象，之前说过，shellcallback接口主要用来处理文件的创建和合并，传入overwrite参数；默认的shellcallback是不支持文件合并的；
+            DefaultShellCallback shellCallback = new DefaultShellCallback(false);
+            //创建一个MyBatisGenerator对象。MyBatisGenerator类是真正用来执行生成动作的类
             MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
+            //创建一个默认的ProgressCallback对象，之前说过，在MBG执行过程中在一定的执行步骤结束后调用ProgressCallback对象的方法，达到执行过程监控的效果；
+            ProgressCallback progressCallback = null;
 
-            ProgressCallback progressCallback = arguments.containsKey(VERBOSE) ? new VerboseProgressCallback()
-                    : null;
-
+            //执行真正的MBG创建过程
             myBatisGenerator.generate(progressCallback, contexts, fullyqualifiedTables);
-
         } catch (XMLParserException e) {
             writeLine(getString("Progress.3")); //$NON-NLS-1$
             writeLine();
@@ -136,7 +100,7 @@ public class ShellRunner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-
+        //输出警告信息
         for (String warning : warnings) {
             writeLine(warning);
         }
@@ -147,6 +111,7 @@ public class ShellRunner {
             writeLine();
             writeLine(getString("Progress.5")); //$NON-NLS-1$
         }
+
     }
 
     private static void usage() {

@@ -46,48 +46,85 @@ import org.mybatis.generator.internal.db.DatabaseIntrospector;
 public class Context extends PropertyHolder {
 
     private String id;
-
+    /**
+     * jdbc连接配置，包装成JDBCConnectionConfiguration 对象，对应<jdbcConnection>元素
+     */
     private JDBCConnectionConfiguration jdbcConnectionConfiguration;
-
     private ConnectionFactoryConfiguration connectionFactoryConfiguration;
-
+    /**
+     * 生成SQL MAP的xml配置，对应<sqlMapGenerator>元素，包装成 SqlMapGeneratorConfiguration 对象
+     */
     private SqlMapGeneratorConfiguration sqlMapGeneratorConfiguration;
-
+    /**
+     * 生成java类型处理器配置，对应<javaTypeResolver>元素，包装成 JavaTypeResolverConfiguration 对象
+     */
     private JavaTypeResolverConfiguration javaTypeResolverConfiguration;
-
+    /**
+     * 生成java模型创建器配置，对应<javaModelGenerator>元素，包装成 JavaModelGeneratorConfiguration 对象
+     */
     private JavaModelGeneratorConfiguration javaModelGeneratorConfiguration;
-
+    /**
+     * 生成Mapper接口配置，对应<javaClientGenerator>元素，包装成 JavaClientGeneratorConfiguration 对象
+     */
     private JavaClientGeneratorConfiguration javaClientGeneratorConfiguration;
-
+    /**
+     * 解析每一个<table>元素，并包装成一个一个的TableConfiguration对象
+     */
     private ArrayList<TableConfiguration> tableConfigurations;
-
+    /**
+     * 生成对象样式，对应context元素的defaultModelType属性(attribute)
+     */
     private ModelType defaultModelType;
-
-    private String beginningDelimiter = "\""; //$NON-NLS-1$
-
-    private String endingDelimiter = "\""; //$NON-NLS-1$
-
+    /**
+     * 对应context元素的beginningDelimiter这个property子元素（注意属性和property的区别）
+     */
+    private String beginningDelimiter = "\"";
+    /**
+     * 对应context元素的endingDelimiter 这个property子元素
+     */
+    private String endingDelimiter = "\"";
+    /**
+     * 对应<commentGenerator>元素，注解生成器的配置
+     */
     private CommentGeneratorConfiguration commentGeneratorConfiguration;
-
+    /**
+     * 注解生成器
+     */
     private CommentGenerator commentGenerator;
-
+    /**
+     * 这是一个包装了所有的plugin的插件执行对象，其中的插件就是由pluginConfigurations中的每一个PluginConfiguration生成
+     */
     private PluginAggregator pluginAggregator;
-
+    /**
+     * 对应每一个<plugin>元素的配置
+     */
     private List<PluginConfiguration> pluginConfigurations;
-
+    /**
+     * 目标运行时，对应context元素的targetRuntime属性(attribute)
+     */
     private String targetRuntime;
-
+    /**
+     * 对应context元素的introspectedColumnImpl属性(attribute)
+     */
     private String introspectedColumnImpl;
-
+    /**
+     * 自动识别数据库关键字，对应context元素的autoDelimitKeywords这个property子元素
+     */
     private Boolean autoDelimitKeywords;
-
+    /**
+     * Java代码格式化工具，对应context元素的javaFormatter这个property子元素
+     */
     private JavaFormatter javaFormatter;
-
+    /**
+     * kotlin代码格式化工具，对应context元素的kotlinFormatter这个property子元素
+     */
     private KotlinFormatter kotlinFormatter;
-
+    /**
+     * Xml代码格式化工具，对应context元素的xmlFormatter这个property子元素
+     */
     private XmlFormatter xmlFormatter;
-    
     private boolean isJava8Targeted = true;
+
 
     public Context(ModelType defaultModelType) {
         super();
@@ -453,22 +490,27 @@ public class Context extends PropertyHolder {
         if (introspectedTables != null) {
             for (IntrospectedTable introspectedTable : introspectedTables) {
                 callback.checkCancel();
-
+                //入口，生成全路径名保存
                 introspectedTable.initialize();
+                /**
+                 * ⭐️⚠️获取entity+mapper接口+xml文件 对应的generator，放到javaGenerators中
+                 * entity：只有一个 BaseRecordGenerator
+                 * mapper接口：保存在 JavaMapperGenerator，根据 javaClientGenerator type="XMLMAPPER" 区分
+                 * xml文件：XMLMapperGenerator
+                 */
                 introspectedTable.calculateGenerators(warnings, callback);
+                //生成文件模板
+                //java文件
                 generatedJavaFiles.addAll(introspectedTable
                         .getGeneratedJavaFiles());
+                //xml文件
                 generatedXmlFiles.addAll(introspectedTable
                         .getGeneratedXmlFiles());
-                generatedKotlinFiles.addAll(introspectedTable
-                        .getGeneratedKotlinFiles());
 
                 generatedJavaFiles.addAll(pluginAggregator
                         .contextGenerateAdditionalJavaFiles(introspectedTable));
                 generatedXmlFiles.addAll(pluginAggregator
                         .contextGenerateAdditionalXmlFiles(introspectedTable));
-                generatedKotlinFiles.addAll(pluginAggregator
-                        .contextGenerateAdditionalKotlinFiles(introspectedTable));
             }
         }
 
@@ -487,7 +529,7 @@ public class Context extends PropertyHolder {
         } else {
             connectionFactory = ObjectFactory.createConnectionFactory(this);
         }
-
+        //获取数据库连接
         return connectionFactory.getConnection();
     }
 

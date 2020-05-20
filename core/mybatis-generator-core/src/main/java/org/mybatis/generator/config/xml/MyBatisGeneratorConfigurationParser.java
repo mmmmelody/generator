@@ -113,38 +113,52 @@ public class MyBatisGeneratorConfigurationParser {
                 && stringHasValue(url)) {
             throw new XMLParserException(getString("RuntimeError.14")); //$NON-NLS-1$
         }
-
-        URL resourceUrl;
-
-        try {
-            if (stringHasValue(resource)) {
-                resourceUrl = ObjectFactory.getResource(resource);
-                if (resourceUrl == null) {
-                    throw new XMLParserException(getString(
-                            "RuntimeError.15", resource)); //$NON-NLS-1$
-                }
-            } else {
-                resourceUrl = new URL(url);
-            }
-
-            InputStream inputStream = resourceUrl.openConnection()
-                    .getInputStream();
-
-            configurationProperties.load(inputStream);
-            inputStream.close();
-        } catch (IOException e) {
-            if (stringHasValue(resource)) {
-                throw new XMLParserException(getString(
-                        "RuntimeError.16", resource)); //$NON-NLS-1$
-            } else {
-                throw new XMLParserException(getString(
-                        "RuntimeError.17", url)); //$NON-NLS-1$
-            }
-        }
+        configurationProperties.put("datasource.driverClassName", "com.mysql.jdbc.Driver");
+        configurationProperties.put("datasource.url", "jdbc:mysql://localhost:3306/test?characterEncoding=utf8&useSSL=true");
+        configurationProperties.put("datasource.user", "root");
+        configurationProperties.put("datasource.password", "admin");
+        configurationProperties.put("datasource.initialSize", "30");
+        configurationProperties.put("datasource.minIdle", "30");
+        configurationProperties.put("datasource.maxActive", "100");
+        configurationProperties.put("datasource.maxPoolPreparedStatementPerConnectionSize", "30");
+//        URL resourceUrl;
+//
+//        try {
+//            if (stringHasValue(resource)) {
+//                resourceUrl = ObjectFactory.getResource(resource);
+//                if (resourceUrl == null) {
+//                    throw new XMLParserException(getString(
+//                            "RuntimeError.15", resource)); //$NON-NLS-1$
+//                }
+//            } else {
+//                resourceUrl = new URL(url);
+//            }
+//
+//            InputStream inputStream = resourceUrl.openConnection()
+//                    .getInputStream();
+//
+//            configurationProperties.load(inputStream);
+//            inputStream.close();
+//        } catch (IOException e) {
+//            if (stringHasValue(resource)) {
+//                throw new XMLParserException(getString(
+//                        "RuntimeError.16", resource)); //$NON-NLS-1$
+//            } else {
+//                throw new XMLParserException(getString(
+//                        "RuntimeError.17", url)); //$NON-NLS-1$
+//            }
+//        }
     }
 
     private void parseContext(Configuration configuration, Node node) {
-
+//解析出context元素上的所有属性，并把所有属性放到一个properties中；
+/**
+ * 得到默认的生成对象的样式(ModeType是一个简单的枚举)
+ * public enum ModelType {
+ HIERARCHICAL("hierarchical"),FLAT("flat"),CONDITIONAL("conditional");
+ }
+ ModelType的getModelType只是很简单的根据string返回对应的类型或者报错*/
+//{"targetRuntime":"MyBatis3","id":"default"}
         Properties attributes = parseAttributes(node);
         String defaultModelType = attributes.getProperty("defaultModelType"); //$NON-NLS-1$
         String targetRuntime = attributes.getProperty("targetRuntime"); //$NON-NLS-1$
@@ -155,16 +169,19 @@ public class MyBatisGeneratorConfigurationParser {
         ModelType mt = defaultModelType == null ? null : ModelType
                 .getModelType(defaultModelType);
 
+        //创建一个Context对象
         Context context = new Context(mt);
-        context.setId(id);
-        if (stringHasValue(introspectedColumnImpl)) {
+        context.setId(id);//id="default"
+        if (stringHasValue(introspectedColumnImpl)) {//pass
             context.setIntrospectedColumnImpl(introspectedColumnImpl);
         }
         if (stringHasValue(targetRuntime)) {
             context.setTargetRuntime(targetRuntime);
         }
 
+        //先添加到配置对象的context列表中，
         configuration.addContext(context);
+        //再解析<context>子元素
 
         NodeList nodeList = node.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -173,7 +190,8 @@ public class MyBatisGeneratorConfigurationParser {
             if (childNode.getNodeType() != Node.ELEMENT_NODE) {
                 continue;
             }
-
+//以下的内容就很模式化了，只是依次把context的不同子元素解析，并添加到Context对象中；所以我们就先不看每一个具体的解析代码，先看一下Context对象的结构；
+            //属性节点都在对象属性中，子节点property都在properties中
             if ("property".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseProperty(context, childNode);
             } else if ("plugin".equals(childNode.getNodeName())) { //$NON-NLS-1$
